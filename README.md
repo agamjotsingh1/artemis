@@ -1,2 +1,2 @@
 # artemis
-Machine learning Winter Project
+Gameboy emulator written in C
