@@ -6,4 +6,11 @@
 typedef uint8_t byte;
 typedef uint16_t dblbyte;
 
+typedef enum {
+    BYTE,
+    DBLBYTE,
+    TRIBYTE,
+    QUADBYTE
+} len_t;
+
 #endif
