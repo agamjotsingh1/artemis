@@ -1,24 +1,54 @@
 #include <cpu.h>
+#include <logger.h>
 #include <instr.h>
+#include <mem.h>
 
 static cpu_ctx_t cpu_ctx;
 
-void cpu_cold_start() {
-    cpu_ctx.pc = ENTRY_PC;
-    cpu_ctx.regfile = init_regfile();
-}
-
-byte gobble_byte(byte* cart_data){
-    byte val = cart_data[cpu_ctx.pc];
+byte gobble_byte(){
+    byte val = mem_fetch(cpu_ctx.pc);
     cpu_ctx.pc += 1;
     return val;
 }
 
-instr_t cpu_fetch_instr(byte* cart_data){
-    byte opcode = gobble_byte(cart_data);
+instr_t fetch_instr(){
+    byte opcode = gobble_byte();
     return parse_instr(opcode);
 }
 
-void cpu_exec(byte* data){
+void cpu_cold_start() {
+    cpu_ctx.pc = ENTRY_PC;
+}
 
+void cpu_exec_once(){
+    while(1) {
+        instr_t instr = fetch_instr();
+
+        switch(instr.instr_class) {
+            case IN_NONE: {
+                ERROR("Invalid instruction provided!");
+                break;
+            }
+
+            case IN_NOP: {
+                break;
+            }
+
+            case IN_LD: {
+                switch(instr.addr_mode) {
+                    case AM_NONE:
+                        break;
+
+                    case AM_R8:
+                    
+                    default:
+                        break;
+                }
+                break;
+            }
+            
+            default:
+                break;
+        }
+    }
 }

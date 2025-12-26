@@ -37,6 +37,6 @@ typedef struct {
     cart_header_t *header;
 } cart_ctx_t;
 
-int cart_load(char cart_filename[CART_FILENAME_SIZE]);
+void cart_load(char cart_filename[CART_FILENAME_SIZE]);
 
 #endif

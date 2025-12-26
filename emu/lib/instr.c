@@ -193,7 +193,7 @@ static const instr_t CB_INSTR_LOOKUP[256] = {
 
 instr_t parse_instr(byte opcode){
     if(opcode >= 256) {
-        ERROR("Opcode out of range!");
+        ERROR("Opcode 0b(%b) out of range!", opcode);
     }
 
     if(opcode == 0xCB) {

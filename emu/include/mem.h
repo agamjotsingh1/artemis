@@ -3,15 +3,12 @@
 
 #include <byte.h>
 
+#define MEM_SIZE 65536
+
 typedef dblbyte addr_t;
 
-typedef struct {
-    dblbyte size;
-    byte* data;
-} mem_t;
-
-mem_t *init_mem(dblbyte size);
-void update_mem(mem_t *mem, addr_t addr, byte val);
-void fetch_mem(mem_t *mem, addr_t addr);
+void mem_write(addr_t addr, byte val);
+void mem_write_chunk(addr_t addr, addr_t chunk_size, byte val[chunk_size]);
+byte mem_fetch(addr_t addr);
 
 #endif

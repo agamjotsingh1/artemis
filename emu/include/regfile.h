@@ -6,20 +6,16 @@
 
 #define REGFILE_LEN 11
 
-typedef struct {
-    byte regs[REGFILE_LEN];
-} regfile_t;
-
 typedef enum {
     // individual 8 bit registers
-    A = 0x0,
-    B = 0x1,
-    C = 0x2,
-    D = 0x3,
-    E = 0x4,
-    H = 0x5,
-    L = 0x6,
-    F = 0x7
+    B = 0x0,
+    C = 0x1,
+    D = 0x2,
+    E = 0x3,
+    H = 0x4,
+    L = 0x5,
+    F = 0x6,
+    A = 0x7
 } reg_t;
 
 typedef enum {
@@ -39,10 +35,9 @@ typedef enum {
     c = 0x10
 } flag_t;
 
-regfile_t *init_regfile();
-void update_reg(regfile_t *regfile, reg_t reg, byte val);
-byte fetch_reg(regfile_t *regfile, reg_t reg);
-dblbyte fetch_unif_reg(regfile_t *regfile, reg_unif_t reg);
-bool is_active_flag(regfile_t *regfile, flag_t flag);
+void write_reg(reg_t reg, byte val);
+byte fetch_reg(reg_t reg);
+dblbyte fetch_unif_reg(reg_unif_t reg);
+bool is_active_flag(flag_t flag);
 
 #endif

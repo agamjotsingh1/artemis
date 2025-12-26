@@ -2,25 +2,30 @@
 #include <logger.h>
 #include <byte.h>
 
-mem_t *init_mem(dblbyte size) {
-    mem_t *mem = (mem_t *) malloc(sizeof(mem_t));
-    mem->size = size;
-    mem->data = malloc(sizeof(byte) * size);
-    return mem;
-}
+static byte mem[MEM_SIZE];
 
-void update_mem(mem_t *mem, addr_t addr, byte val){
-    if(addr >= mem->size) {
-        ERROR("Memory out of range!");
+void mem_write(addr_t addr, byte val){
+    if(addr >= MEM_SIZE) {
+        ERROR("Memory 0b(%b) out of range!", addr);
     }
 
-    (mem->data)[addr] = val;
+    mem[addr] = val;
 }
 
-void fetch_mem(mem_t *mem, addr_t addr){
-    if(addr >= mem->size) {
-        ERROR("Memory out of range!");
+void mem_write_chunk(addr_t addr, addr_t chunk_size, byte val[chunk_size]){
+    if(addr + chunk_size >= MEM_SIZE) {
+        ERROR("Memory chunk leaking out of range!");
     }
 
-    return (mem->data)[addr];
+    for(dblbyte i = 0; i < chunk_size; i++){
+        mem_write(addr + i, val[i]);
+    }
+}
+
+byte mem_fetch(addr_t addr){
+    if(addr >= MEM_SIZE) {
+        ERROR("Memory 0b(%b) out of range!", addr);
+    }
+
+    return mem[addr];
 }

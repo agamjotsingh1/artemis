@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <cart.h>
+#include <mem.h>
 #include <logger.h>
 
 static cart_ctx_t cart_ctx;
@@ -115,7 +116,7 @@ byte verify_checksum(){
     return (checksum & 0xFF);
 }
 
-int cart_load(char cart_filename[CART_FILENAME_SIZE]){
+void cart_load(char cart_filename[CART_FILENAME_SIZE]){
     snprintf(cart_ctx.filename, CART_FILENAME_SIZE, "%s", cart_filename);
 
     FILE* cart = fopen(cart_ctx.filename, "rb");
@@ -150,9 +151,9 @@ int cart_load(char cart_filename[CART_FILENAME_SIZE]){
     LOG("\t Checksum : %2.2X (%s)", cart_ctx.header->checksum, verify_checksum() ? "PASSED" : "FAILED");
 
     if(!verify_checksum()) {
-        ERROR("Cartridge checksum failed, cartridge may be corrupted...");
-        return 1;
+        ERROR("Cartridge checksum failed, cartridge may be corrupted!");
     }
 
-    return 0;
+    // write the cart data into virtual ROM
+    mem_write_chunk(0x0000, cart_ctx.size, cart_ctx.data);
 }
