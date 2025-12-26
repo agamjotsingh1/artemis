@@ -48,7 +48,7 @@ byte truncate_byte(dblbyte val){
 }
 
 // write to location - either memory or regfile
-void write_loc(op_t op, val_t val, val_t imm){
+void write_loc(op_t op, val_t val){
     // TODO!
     // Implement OT_MEM_IO_* operator types
 
@@ -91,11 +91,7 @@ void write_loc(op_t op, val_t val, val_t imm){
                 ERROR("Value type (requested U_BYTE) does not match!");
             }
 
-            if(imm.type != U_DBLBYTE) {
-                ERROR("Imm type (requested U_DBLBYTE) does not match!");
-            }
-
-            addr_t addr = (addr_t) imm.u_dblbyte;
+            addr_t addr = (addr_t) (gobble_imm(U_DBLBYTE).u_dblbyte);
             mem_write(addr, val.u_byte);
             break;
 
@@ -200,29 +196,59 @@ void cpu_exec_once(){
         instr_t instr = fetch_instr();
 
         switch(instr.instr_class) {
-            case IN_NONE: {
+            case IN_NONE:
                 ERROR("Invalid instruction provided!");
                 break;
-            }
 
-            case IN_NOP: {
+            case IN_NOP:
                 break;
-            }
 
-            case IN_LD: {
-                switch(instr.op2.type) {
-                    case OT_R8:
-
-                        break;
-
-                    case AM_R8:
-
-                    
-                    default:
-                        break;
+            case IN_LD:
+                if(instr.op1.type == OT_NONE || instr.op2.type == OT_NONE) {
+                    ERROR("Invalid LD instruction operands!");
                 }
+
+                write_loc(instr.op1, fetch_loc(instr.op2));
                 break;
-            }
+
+            case IN_LDH:
+                ERROR("Entered TODO territory!");
+
+                // TODO!
+                // Implement LDH
+                write_loc(instr.op1, fetch_loc(instr.op2));
+                break;
+
+            case IN_PUSH:
+                if(instr.op1.type != OT_R16) {
+                    ERROR("Invalid PUSH instruction operands!");
+                }
+
+                dblbyte reg_val = fetch_unif_reg(instr.op1.reg.r16);
+
+                write_unif_reg(SP, fetch_unif_reg(SP) - 1);
+                mem_write((addr_t) SP, (byte) reg_val >> 8);
+
+                write_unif_reg(SP, fetch_unif_reg(SP) - 1);
+                mem_write((addr_t) SP, (byte) (reg_val & 0x00FF));
+
+                break;
+
+            case IN_POP:
+                if(instr.op1.type != OT_R16) {
+                    ERROR("Invalid POP instruction operands!");
+                }
+
+                dblbyte reg_val = fetch_unif_reg(instr.op1.reg.r16);
+
+                write_unif_reg(SP, fetch_unif_reg(SP) - 1);
+                mem_write((addr_t) SP, (byte) reg_val >> 8);
+
+                write_unif_reg(SP, fetch_unif_reg(SP) - 1);
+                mem_write((addr_t) SP, (byte) (reg_val & 0x00FF));
+
+                break;
+
             
             default:
                 break;
