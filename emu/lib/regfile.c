@@ -23,6 +23,15 @@ byte fetch_reg(reg_t reg){
     }
 }
 
+
+void write_unif_reg(reg_unif_t reg, dblbyte val){
+    reg_t reg_high = (reg_t) (reg >> 4);
+    reg_t reg_low  = (reg_t) (reg & 0x0F);
+
+    write_reg(reg_high, (byte) (val >> 8));
+    write_reg(reg_low, (byte) (val & 0x00FF));
+}
+
 dblbyte fetch_unif_reg(reg_unif_t reg){
     return ((fetch_reg(reg >> 4) & 0xFFFF) << 8)
             | (fetch_reg(reg & 0x0F) & 0xFFFF);

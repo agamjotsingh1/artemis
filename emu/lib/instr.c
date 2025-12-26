@@ -1,203 +1,410 @@
 #include <instr.h>
 
 static const instr_t INSTR_LOOKUP[256] = {
-    // 0x0X
-    [0x00] = { 4, 1, AM_NONE, IN_NOP }, [0x01] = { 12, 3, AM_IMM16, IN_LD },
-    [0x02] = { 8, 1, AM_NONE, IN_LD }, [0x03] = { 8, 1, AM_R16, IN_INC },
-    [0x04] = { 4, 1, AM_R8, IN_INC }, [0x05] = { 4, 1, AM_R8, IN_DEC },
-    [0x06] = { 8, 2, AM_IMM8, IN_LD }, [0x07] = { 4, 1, AM_NONE, IN_RLCA },
-    [0x08] = { 20, 3, AM_IMM16, IN_LD }, [0x09] = { 8, 1, AM_R16, IN_ADD },
-    [0x0A] = { 8, 1, AM_NONE, IN_LD }, [0x0B] = { 8, 1, AM_R16, IN_DEC },
-    [0x0C] = { 4, 1, AM_R8, IN_INC }, [0x0D] = { 4, 1, AM_R8, IN_DEC },
-    [0x0E] = { 8, 2, AM_IMM8, IN_LD }, [0x0F] = { 4, 1, AM_NONE, IN_RRCA },
+    // 0x00 - 0x0F
+    [0x00] = INSTR(4, 1, IN_NOP, OP_NONE, OP_NONE, CT_NONE),
+    [0x01] = INSTR(12, 3, IN_LD, OP_R16(BC), OP_IMM16, CT_NONE),
+    [0x02] = INSTR(8, 1, IN_LD, OP_MEM_R16(BC), OP_R8(A), CT_NONE),
+    [0x03] = INSTR(8, 1, IN_INC, OP_R16(BC), OP_NONE, CT_NONE),
+    [0x04] = INSTR(4, 1, IN_INC, OP_R8(B), OP_NONE, CT_NONE),
+    [0x05] = INSTR(4, 1, IN_DEC, OP_R8(B), OP_NONE, CT_NONE),
+    [0x06] = INSTR(8, 2, IN_LD, OP_R8(B), OP_IMM8, CT_NONE),
+    [0x07] = INSTR(4, 1, IN_RLCA, OP_NONE, OP_NONE, CT_NONE),
+    [0x08] = INSTR(20, 3, IN_LD, OP_MEM_IMM16, OP_R16(SP), CT_NONE),
+    [0x09] = INSTR(8, 1, IN_ADD, OP_R16(HL), OP_R16(BC), CT_NONE),
+    [0x0A] = INSTR(8, 1, IN_LD, OP_R8(A), OP_MEM_R16(BC), CT_NONE),
+    [0x0B] = INSTR(8, 1, IN_DEC, OP_R16(BC), OP_NONE, CT_NONE),
+    [0x0C] = INSTR(4, 1, IN_INC, OP_R8(C), OP_NONE, CT_NONE),
+    [0x0D] = INSTR(4, 1, IN_DEC, OP_R8(C), OP_NONE, CT_NONE),
+    [0x0E] = INSTR(8, 2, IN_LD, OP_R8(C), OP_IMM8, CT_NONE),
+    [0x0F] = INSTR(4, 1, IN_RRCA, OP_NONE, OP_NONE, CT_NONE),
 
-    // 0x1X
-    [0x10] = { 4, 2, AM_NONE, IN_STOP }, [0x11] = { 12, 3, AM_IMM16, IN_LD },
-    [0x12] = { 8, 1, AM_NONE, IN_LD }, [0x13] = { 8, 1, AM_R16, IN_INC },
-    [0x14] = { 4, 1, AM_R8, IN_INC }, [0x15] = { 4, 1, AM_R8, IN_DEC },
-    [0x16] = { 8, 2, AM_IMM8, IN_LD }, [0x17] = { 4, 1, AM_NONE, IN_RLA },
-    [0x18] = { 12, 2, AM_S8, IN_JR }, [0x19] = { 8, 1, AM_R16, IN_ADD },
-    [0x1A] = { 8, 1, AM_NONE, IN_LD }, [0x1B] = { 8, 1, AM_R16, IN_DEC },
-    [0x1C] = { 4, 1, AM_R8, IN_INC }, [0x1D] = { 4, 1, AM_R8, IN_DEC },
-    [0x1E] = { 8, 2, AM_IMM8, IN_LD }, [0x1F] = { 4, 1, AM_NONE, IN_RRA },
+    // 0x10 - 0x1F
+    [0x10] = INSTR(4, 2, IN_STOP, OP_NONE, OP_NONE, CT_NONE),
+    [0x11] = INSTR(12, 3, IN_LD, OP_R16(DE), OP_IMM16, CT_NONE),
+    [0x12] = INSTR(8, 1, IN_LD, OP_MEM_R16(DE), OP_R8(A), CT_NONE),
+    [0x13] = INSTR(8, 1, IN_INC, OP_R16(DE), OP_NONE, CT_NONE),
+    [0x14] = INSTR(4, 1, IN_INC, OP_R8(D), OP_NONE, CT_NONE),
+    [0x15] = INSTR(4, 1, IN_DEC, OP_R8(D), OP_NONE, CT_NONE),
+    [0x16] = INSTR(8, 2, IN_LD, OP_R8(D), OP_IMM8, CT_NONE),
+    [0x17] = INSTR(4, 1, IN_RLA, OP_NONE, OP_NONE, CT_NONE),
+    [0x18] = INSTR(12, 2, IN_JR, OP_IMM8_S, OP_NONE, CT_NONE),
+    [0x19] = INSTR(8, 1, IN_ADD, OP_R16(HL), OP_R16(DE), CT_NONE),
+    [0x1A] = INSTR(8, 1, IN_LD, OP_R8(A), OP_MEM_R16(DE), CT_NONE),
+    [0x1B] = INSTR(8, 1, IN_DEC, OP_R16(DE), OP_NONE, CT_NONE),
+    [0x1C] = INSTR(4, 1, IN_INC, OP_R8(E), OP_NONE, CT_NONE),
+    [0x1D] = INSTR(4, 1, IN_DEC, OP_R8(E), OP_NONE, CT_NONE),
+    [0x1E] = INSTR(8, 2, IN_LD, OP_R8(E), OP_IMM8, CT_NONE),
+    [0x1F] = INSTR(4, 1, IN_RRA, OP_NONE, OP_NONE, CT_NONE),
 
-    // 0x2X
-    [0x20] = { 8, 2, AM_S8, IN_JR }, [0x21] = { 12, 3, AM_IMM16, IN_LD },
-    [0x22] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x23] = { 8, 1, AM_R16, IN_INC },
-    [0x24] = { 4, 1, AM_R8, IN_INC }, [0x25] = { 4, 1, AM_R8, IN_DEC },
-    [0x26] = { 8, 2, AM_IMM8, IN_LD }, [0x27] = { 4, 1, AM_NONE, IN_DAA },
-    [0x28] = { 8, 2, AM_S8, IN_JR }, [0x29] = { 8, 1, AM_R16, IN_ADD },
-    [0x2A] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x2B] = { 8, 1, AM_R16, IN_DEC },
-    [0x2C] = { 4, 1, AM_R8, IN_INC }, [0x2D] = { 4, 1, AM_R8, IN_DEC },
-    [0x2E] = { 8, 2, AM_IMM8, IN_LD }, [0x2F] = { 4, 1, AM_NONE, IN_CPL },
+    // 0x20 - 0x2F
+    [0x20] = INSTR(8, 2, IN_JR, OP_IMM8_S, OP_NONE, CT_NZ),
+    [0x21] = INSTR(12, 3, IN_LD, OP_R16(HL), OP_IMM16, CT_NONE),
+    [0x22] = INSTR(8, 1, IN_LD, OP_HL_INC, OP_R8(A), CT_NONE),
+    [0x23] = INSTR(8, 1, IN_INC, OP_R16(HL), OP_NONE, CT_NONE),
+    [0x24] = INSTR(4, 1, IN_INC, OP_R8(H), OP_NONE, CT_NONE),
+    [0x25] = INSTR(4, 1, IN_DEC, OP_R8(H), OP_NONE, CT_NONE),
+    [0x26] = INSTR(8, 2, IN_LD, OP_R8(H), OP_IMM8, CT_NONE),
+    [0x27] = INSTR(4, 1, IN_DAA, OP_NONE, OP_NONE, CT_NONE),
+    [0x28] = INSTR(8, 2, IN_JR, OP_IMM8_S, OP_NONE, CT_Z),
+    [0x29] = INSTR(8, 1, IN_ADD, OP_R16(HL), OP_R16(HL), CT_NONE),
+    [0x2A] = INSTR(8, 1, IN_LD, OP_R8(A), OP_HL_INC, CT_NONE),
+    [0x2B] = INSTR(8, 1, IN_DEC, OP_R16(HL), OP_NONE, CT_NONE),
+    [0x2C] = INSTR(4, 1, IN_INC, OP_R8(L), OP_NONE, CT_NONE),
+    [0x2D] = INSTR(4, 1, IN_DEC, OP_R8(L), OP_NONE, CT_NONE),
+    [0x2E] = INSTR(8, 2, IN_LD, OP_R8(L), OP_IMM8, CT_NONE),
+    [0x2F] = INSTR(4, 1, IN_CPL, OP_NONE, OP_NONE, CT_NONE),
 
-    // 0x3X
-    [0x30] = { 8, 2, AM_S8, IN_JR }, [0x31] = { 12, 3, AM_IMM16, IN_LD },
-    [0x32] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x33] = { 8, 1, AM_R16, IN_INC },
-    [0x34] = { 12, 1, AM_HL_INDIR, IN_INC }, [0x35] = { 12, 1, AM_HL_INDIR, IN_DEC },
-    [0x36] = { 12, 2, AM_IMM8, IN_LD }, [0x37] = { 4, 1, AM_NONE, IN_SCF },
-    [0x38] = { 8, 2, AM_S8, IN_JR }, [0x39] = { 8, 1, AM_R16, IN_ADD },
-    [0x3A] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x3B] = { 8, 1, AM_R16, IN_DEC },
-    [0x3C] = { 4, 1, AM_R8, IN_INC }, [0x3D] = { 4, 1, AM_R8, IN_DEC },
-    [0x3E] = { 8, 2, AM_IMM8, IN_LD }, [0x3F] = { 4, 1, AM_NONE, IN_CCF },
+    // 0x30 - 0x3F
+    [0x30] = INSTR(8, 2, IN_JR, OP_IMM8_S, OP_NONE, CT_NC),
+    [0x31] = INSTR(12, 3, IN_LD, OP_R16(SP), OP_IMM16, CT_NONE),
+    [0x32] = INSTR(8, 1, IN_LD, OP_HL_DEC, OP_R8(A), CT_NONE),
+    [0x33] = INSTR(8, 1, IN_INC, OP_R16(SP), OP_NONE, CT_NONE),
+    [0x34] = INSTR(12, 1, IN_INC, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x35] = INSTR(12, 1, IN_DEC, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x36] = INSTR(12, 2, IN_LD, OP_MEM_R16(HL), OP_IMM8, CT_NONE),
+    [0x37] = INSTR(4, 1, IN_SCF, OP_NONE, OP_NONE, CT_NONE),
+    [0x38] = INSTR(8, 2, IN_JR, OP_IMM8_S, OP_NONE, CT_C),
+    [0x39] = INSTR(8, 1, IN_ADD, OP_R16(HL), OP_R16(SP), CT_NONE),
+    [0x3A] = INSTR(8, 1, IN_LD, OP_R8(A), OP_HL_DEC, CT_NONE),
+    [0x3B] = INSTR(8, 1, IN_DEC, OP_R16(SP), OP_NONE, CT_NONE),
+    [0x3C] = INSTR(4, 1, IN_INC, OP_R8(A), OP_NONE, CT_NONE),
+    [0x3D] = INSTR(4, 1, IN_DEC, OP_R8(A), OP_NONE, CT_NONE),
+    [0x3E] = INSTR(8, 2, IN_LD, OP_R8(A), OP_IMM8, CT_NONE),
+    [0x3F] = INSTR(4, 1, IN_CCF, OP_NONE, OP_NONE, CT_NONE),
 
-    // 0x4X
-    [0x40] = { 4, 1, AM_R8, IN_LD }, [0x41] = { 4, 1, AM_R8, IN_LD },
-    [0x42] = { 4, 1, AM_R8, IN_LD }, [0x43] = { 4, 1, AM_R8, IN_LD },
-    [0x44] = { 4, 1, AM_R8, IN_LD }, [0x45] = { 4, 1, AM_R8, IN_LD },
-    [0x46] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x47] = { 4, 1, AM_R8, IN_LD },
-    [0x48] = { 4, 1, AM_R8, IN_LD }, [0x49] = { 4, 1, AM_R8, IN_LD },
-    [0x4A] = { 4, 1, AM_R8, IN_LD }, [0x4B] = { 4, 1, AM_R8, IN_LD },
-    [0x4C] = { 4, 1, AM_R8, IN_LD }, [0x4D] = { 4, 1, AM_R8, IN_LD },
-    [0x4E] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x4F] = { 4, 1, AM_R8, IN_LD },
+    // 0x40 - 0x47 (LD B, y)
+    [0x40] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(B), CT_NONE),
+    [0x41] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(C), CT_NONE),
+    [0x42] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(D), CT_NONE),
+    [0x43] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(E), CT_NONE),
+    [0x44] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(H), CT_NONE),
+    [0x45] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(L), CT_NONE),
+    [0x46] = INSTR(8, 1, IN_LD, OP_R8(B), OP_MEM_R16(HL), CT_NONE),
+    [0x47] = INSTR(4, 1, IN_LD, OP_R8(B), OP_R8(A), CT_NONE),
 
-    // 0x5X
-    [0x50] = { 4, 1, AM_R8, IN_LD }, [0x51] = { 4, 1, AM_R8, IN_LD },
-    [0x52] = { 4, 1, AM_R8, IN_LD }, [0x53] = { 4, 1, AM_R8, IN_LD },
-    [0x54] = { 4, 1, AM_R8, IN_LD }, [0x55] = { 4, 1, AM_R8, IN_LD },
-    [0x56] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x57] = { 4, 1, AM_R8, IN_LD },
-    [0x58] = { 4, 1, AM_R8, IN_LD }, [0x59] = { 4, 1, AM_R8, IN_LD },
-    [0x5A] = { 4, 1, AM_R8, IN_LD }, [0x5B] = { 4, 1, AM_R8, IN_LD },
-    [0x5C] = { 4, 1, AM_R8, IN_LD }, [0x5D] = { 4, 1, AM_R8, IN_LD },
-    [0x5E] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x5F] = { 4, 1, AM_R8, IN_LD },
+    // 0x48 - 0x4F (LD C, y)
+    [0x48] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(B), CT_NONE),
+    [0x49] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(C), CT_NONE),
+    [0x4A] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(D), CT_NONE),
+    [0x4B] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(E), CT_NONE),
+    [0x4C] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(H), CT_NONE),
+    [0x4D] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(L), CT_NONE),
+    [0x4E] = INSTR(8, 1, IN_LD, OP_R8(C), OP_MEM_R16(HL), CT_NONE),
+    [0x4F] = INSTR(4, 1, IN_LD, OP_R8(C), OP_R8(A), CT_NONE),
 
-    // 0x6X
-    [0x60] = { 4, 1, AM_R8, IN_LD }, [0x61] = { 4, 1, AM_R8, IN_LD },
-    [0x62] = { 4, 1, AM_R8, IN_LD }, [0x63] = { 4, 1, AM_R8, IN_LD },
-    [0x64] = { 4, 1, AM_R8, IN_LD }, [0x65] = { 4, 1, AM_R8, IN_LD },
-    [0x66] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x67] = { 4, 1, AM_R8, IN_LD },
-    [0x68] = { 4, 1, AM_R8, IN_LD }, [0x69] = { 4, 1, AM_R8, IN_LD },
-    [0x6A] = { 4, 1, AM_R8, IN_LD }, [0x6B] = { 4, 1, AM_R8, IN_LD },
-    [0x6C] = { 4, 1, AM_R8, IN_LD }, [0x6D] = { 4, 1, AM_R8, IN_LD },
-    [0x6E] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x6F] = { 4, 1, AM_R8, IN_LD },
+    // 0x50 - 0x57 (LD D, y)
+    [0x50] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(B), CT_NONE),
+    [0x51] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(C), CT_NONE),
+    [0x52] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(D), CT_NONE),
+    [0x53] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(E), CT_NONE),
+    [0x54] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(H), CT_NONE),
+    [0x55] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(L), CT_NONE),
+    [0x56] = INSTR(8, 1, IN_LD, OP_R8(D), OP_MEM_R16(HL), CT_NONE),
+    [0x57] = INSTR(4, 1, IN_LD, OP_R8(D), OP_R8(A), CT_NONE),
 
-    // 0x7X
-    [0x70] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x71] = { 8, 1, AM_HL_INDIR, IN_LD },
-    [0x72] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x73] = { 8, 1, AM_HL_INDIR, IN_LD },
-    [0x74] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x75] = { 8, 1, AM_HL_INDIR, IN_LD },
-    [0x76] = { 4, 1, AM_NONE, IN_HALT }, [0x77] = { 8, 1, AM_HL_INDIR, IN_LD },
-    [0x78] = { 4, 1, AM_R8, IN_LD }, [0x79] = { 4, 1, AM_R8, IN_LD },
-    [0x7A] = { 4, 1, AM_R8, IN_LD }, [0x7B] = { 4, 1, AM_R8, IN_LD },
-    [0x7C] = { 4, 1, AM_R8, IN_LD }, [0x7D] = { 4, 1, AM_R8, IN_LD },
-    [0x7E] = { 8, 1, AM_HL_INDIR, IN_LD }, [0x7F] = { 4, 1, AM_R8, IN_LD },
+    // 0x58 - 0x5F (LD E, y)
+    [0x58] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(B), CT_NONE),
+    [0x59] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(C), CT_NONE),
+    [0x5A] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(D), CT_NONE),
+    [0x5B] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(E), CT_NONE),
+    [0x5C] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(H), CT_NONE),
+    [0x5D] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(L), CT_NONE),
+    [0x5E] = INSTR(8, 1, IN_LD, OP_R8(E), OP_MEM_R16(HL), CT_NONE),
+    [0x5F] = INSTR(4, 1, IN_LD, OP_R8(E), OP_R8(A), CT_NONE),
 
-    // 0x8X
-    [0x80] = { 4, 1, AM_R8, IN_ADD }, [0x81] = { 4, 1, AM_R8, IN_ADD },
-    [0x82] = { 4, 1, AM_R8, IN_ADD }, [0x83] = { 4, 1, AM_R8, IN_ADD },
-    [0x84] = { 4, 1, AM_R8, IN_ADD }, [0x85] = { 4, 1, AM_R8, IN_ADD },
-    [0x86] = { 8, 1, AM_HL_INDIR, IN_ADD }, [0x87] = { 4, 1, AM_R8, IN_ADD },
-    [0x88] = { 4, 1, AM_R8, IN_ADC }, [0x89] = { 4, 1, AM_R8, IN_ADC },
-    [0x8A] = { 4, 1, AM_R8, IN_ADC }, [0x8B] = { 4, 1, AM_R8, IN_ADC },
-    [0x8C] = { 4, 1, AM_R8, IN_ADC }, [0x8D] = { 4, 1, AM_R8, IN_ADC },
-    [0x8E] = { 8, 1, AM_HL_INDIR, IN_ADC }, [0x8F] = { 4, 1, AM_R8, IN_ADC },
+    // 0x60 - 0x67 (LD H, y)
+    [0x60] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(B), CT_NONE),
+    [0x61] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(C), CT_NONE),
+    [0x62] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(D), CT_NONE),
+    [0x63] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(E), CT_NONE),
+    [0x64] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(H), CT_NONE),
+    [0x65] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(L), CT_NONE),
+    [0x66] = INSTR(8, 1, IN_LD, OP_R8(H), OP_MEM_R16(HL), CT_NONE),
+    [0x67] = INSTR(4, 1, IN_LD, OP_R8(H), OP_R8(A), CT_NONE),
 
-    // 0x9X
-    [0x90] = { 4, 1, AM_R8, IN_SUB }, [0x91] = { 4, 1, AM_R8, IN_SUB },
-    [0x92] = { 4, 1, AM_R8, IN_SUB }, [0x93] = { 4, 1, AM_R8, IN_SUB },
-    [0x94] = { 4, 1, AM_R8, IN_SUB }, [0x95] = { 4, 1, AM_R8, IN_SUB },
-    [0x96] = { 8, 1, AM_HL_INDIR, IN_SUB }, [0x97] = { 4, 1, AM_R8, IN_SUB },
-    [0x98] = { 4, 1, AM_R8, IN_SBC }, [0x99] = { 4, 1, AM_R8, IN_SBC },
-    [0x9A] = { 4, 1, AM_R8, IN_SBC }, [0x9B] = { 4, 1, AM_R8, IN_SBC },
-    [0x9C] = { 4, 1, AM_R8, IN_SBC }, [0x9D] = { 4, 1, AM_R8, IN_SBC },
-    [0x9E] = { 8, 1, AM_HL_INDIR, IN_SBC }, [0x9F] = { 4, 1, AM_R8, IN_SBC },
+    // 0x68 - 0x6F (LD L, y)
+    [0x68] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(B), CT_NONE),
+    [0x69] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(C), CT_NONE),
+    [0x6A] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(D), CT_NONE),
+    [0x6B] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(E), CT_NONE),
+    [0x6C] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(H), CT_NONE),
+    [0x6D] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(L), CT_NONE),
+    [0x6E] = INSTR(8, 1, IN_LD, OP_R8(L), OP_MEM_R16(HL), CT_NONE),
+    [0x6F] = INSTR(4, 1, IN_LD, OP_R8(L), OP_R8(A), CT_NONE),
 
-    // 0xAX
-    [0xA0] = { 4, 1, AM_R8, IN_AND }, [0xA1] = { 4, 1, AM_R8, IN_AND },
-    [0xA2] = { 4, 1, AM_R8, IN_AND }, [0xA3] = { 4, 1, AM_R8, IN_AND },
-    [0xA4] = { 4, 1, AM_R8, IN_AND }, [0xA5] = { 4, 1, AM_R8, IN_AND },
-    [0xA6] = { 8, 1, AM_HL_INDIR, IN_AND }, [0xA7] = { 4, 1, AM_R8, IN_AND },
-    [0xA8] = { 4, 1, AM_R8, IN_XOR }, [0xA9] = { 4, 1, AM_R8, IN_XOR },
-    [0xAA] = { 4, 1, AM_R8, IN_XOR }, [0xAB] = { 4, 1, AM_R8, IN_XOR },
-    [0xAC] = { 4, 1, AM_R8, IN_XOR }, [0xAD] = { 4, 1, AM_R8, IN_XOR },
-    [0xAE] = { 8, 1, AM_HL_INDIR, IN_XOR }, [0xAF] = { 4, 1, AM_R8, IN_XOR },
+    // 0x70 - 0x77 (LD (HL), y) and HALT
+    [0x70] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(B), CT_NONE),
+    [0x71] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(C), CT_NONE),
+    [0x72] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(D), CT_NONE),
+    [0x73] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(E), CT_NONE),
+    [0x74] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(H), CT_NONE),
+    [0x75] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(L), CT_NONE),
+    [0x76] = INSTR(4, 1, IN_HALT, OP_NONE, OP_NONE, CT_NONE),
+    [0x77] = INSTR(8, 1, IN_LD, OP_MEM_R16(HL), OP_R8(A), CT_NONE),
 
-    // 0xBX
-    [0xB0] = { 4, 1, AM_R8, IN_OR }, [0xB1] = { 4, 1, AM_R8, IN_OR },
-    [0xB2] = { 4, 1, AM_R8, IN_OR }, [0xB3] = { 4, 1, AM_R8, IN_OR },
-    [0xB4] = { 4, 1, AM_R8, IN_OR }, [0xB5] = { 4, 1, AM_R8, IN_OR },
-    [0xB6] = { 8, 1, AM_HL_INDIR, IN_OR }, [0xB7] = { 4, 1, AM_R8, IN_OR },
-    [0xB8] = { 4, 1, AM_R8, IN_CP }, [0xB9] = { 4, 1, AM_R8, IN_CP },
-    [0xBA] = { 4, 1, AM_R8, IN_CP }, [0xBB] = { 4, 1, AM_R8, IN_CP },
-    [0xBC] = { 4, 1, AM_R8, IN_CP }, [0xBD] = { 4, 1, AM_R8, IN_CP },
-    [0xBE] = { 8, 1, AM_HL_INDIR, IN_CP }, [0xBF] = { 4, 1, AM_R8, IN_CP },
+    // 0x78 - 0x7F (LD A, y)
+    [0x78] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(B), CT_NONE),
+    [0x79] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(C), CT_NONE),
+    [0x7A] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(D), CT_NONE),
+    [0x7B] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(E), CT_NONE),
+    [0x7C] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(H), CT_NONE),
+    [0x7D] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(L), CT_NONE),
+    [0x7E] = INSTR(8, 1, IN_LD, OP_R8(A), OP_MEM_R16(HL), CT_NONE),
+    [0x7F] = INSTR(4, 1, IN_LD, OP_R8(A), OP_R8(A), CT_NONE),
 
-    // 0xCX
-    [0xC0] = { 8, 1, AM_NONE, IN_RET }, [0xC1] = { 12, 1, AM_NONE, IN_POP },
-    [0xC2] = { 12, 3, AM_IMM16, IN_JP }, [0xC3] = { 16, 3, AM_IMM16, IN_JP },
-    [0xC4] = { 12, 3, AM_IMM16, IN_CALL }, [0xC5] = { 16, 1, AM_NONE, IN_PUSH },
-    [0xC6] = { 8, 2, AM_IMM8, IN_ADD }, [0xC7] = { 16, 1, AM_NONE, IN_RST },
-    [0xC8] = { 8, 1, AM_NONE, IN_RET }, [0xC9] = { 16, 1, AM_NONE, IN_RET },
-    [0xCA] = { 12, 3, AM_IMM16, IN_JP }, [0xCB] = { 4, 1, AM_NONE, IN_NONE },
-    [0xCC] = { 12, 3, AM_IMM16, IN_CALL }, [0xCD] = { 24, 3, AM_IMM16, IN_CALL },
-    [0xCE] = { 8, 2, AM_IMM8, IN_ADC }, [0xCF] = { 16, 1, AM_NONE, IN_RST },
+    // 0x80 - 0x87 (ADD A, y)
+    [0x80] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(B), CT_NONE),
+    [0x81] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(C), CT_NONE),
+    [0x82] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(D), CT_NONE),
+    [0x83] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(E), CT_NONE),
+    [0x84] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(H), CT_NONE),
+    [0x85] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(L), CT_NONE),
+    [0x86] = INSTR(8, 1, IN_ADD, OP_R8(A), OP_MEM_R16(HL), CT_NONE),
+    [0x87] = INSTR(4, 1, IN_ADD, OP_R8(A), OP_R8(A), CT_NONE),
 
-    // 0xDX
-    [0xD0] = { 8, 1, AM_NONE, IN_RET }, [0xD1] = { 12, 1, AM_NONE, IN_POP },
-    [0xD2] = { 12, 3, AM_IMM16, IN_JP }, [0xD3] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xD4] = { 12, 3, AM_IMM16, IN_CALL }, [0xD5] = { 16, 1, AM_NONE, IN_PUSH },
-    [0xD6] = { 8, 2, AM_IMM8, IN_SUB }, [0xD7] = { 16, 1, AM_NONE, IN_RST },
-    [0xD8] = { 8, 1, AM_NONE, IN_RET }, [0xD9] = { 16, 1, AM_NONE, IN_RETI },
-    [0xDA] = { 12, 3, AM_IMM16, IN_JP }, [0xDB] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xDC] = { 12, 3, AM_IMM16, IN_CALL }, [0xDD] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xDE] = { 8, 2, AM_IMM8, IN_SBC }, [0xDF] = { 16, 1, AM_NONE, IN_RST },
+    // 0x88 - 0x8F (ADC A, y)
+    [0x88] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(B), CT_NONE),
+    [0x89] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(C), CT_NONE),
+    [0x8A] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(D), CT_NONE),
+    [0x8B] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(E), CT_NONE),
+    [0x8C] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(H), CT_NONE),
+    [0x8D] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(L), CT_NONE),
+    [0x8E] = INSTR(8, 1, IN_ADC, OP_R8(A), OP_MEM_R16(HL), CT_NONE),
+    [0x8F] = INSTR(4, 1, IN_ADC, OP_R8(A), OP_R8(A), CT_NONE),
 
-    // 0xEX
-    [0xE0] = { 12, 2, AM_HRAM, IN_LDH }, [0xE1] = { 12, 1, AM_NONE, IN_POP },
-    [0xE2] = { 8, 1, AM_NONE, IN_LDH }, [0xE3] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xE4] = { 0, 0, AM_NONE, IN_NONE }, [0xE5] = { 16, 1, AM_NONE, IN_PUSH },
-    [0xE6] = { 8, 2, AM_IMM8, IN_AND }, [0xE7] = { 16, 1, AM_NONE, IN_RST },
-    [0xE8] = { 16, 2, AM_S8, IN_ADD }, [0xE9] = { 4, 1, AM_NONE, IN_JP },
-    [0xEA] = { 16, 3, AM_IMM16, IN_LD }, [0xEB] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xEC] = { 0, 0, AM_NONE, IN_NONE }, [0xED] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xEE] = { 8, 2, AM_IMM8, IN_XOR }, [0xEF] = { 16, 1, AM_NONE, IN_RST },
+    // 0x90 - 0x97 (SUB A, y) -> dest A implied
+    [0x90] = INSTR(4, 1, IN_SUB, OP_R8(B), OP_NONE, CT_NONE),
+    [0x91] = INSTR(4, 1, IN_SUB, OP_R8(C), OP_NONE, CT_NONE),
+    [0x92] = INSTR(4, 1, IN_SUB, OP_R8(D), OP_NONE, CT_NONE),
+    [0x93] = INSTR(4, 1, IN_SUB, OP_R8(E), OP_NONE, CT_NONE),
+    [0x94] = INSTR(4, 1, IN_SUB, OP_R8(H), OP_NONE, CT_NONE),
+    [0x95] = INSTR(4, 1, IN_SUB, OP_R8(L), OP_NONE, CT_NONE),
+    [0x96] = INSTR(8, 1, IN_SUB, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x97] = INSTR(4, 1, IN_SUB, OP_R8(A), OP_NONE, CT_NONE),
 
-    // 0xFX
-    [0xF0] = { 12, 2, AM_HRAM, IN_LDH }, [0xF1] = { 12, 1, AM_NONE, IN_POP },
-    [0xF2] = { 8, 1, AM_NONE, IN_LDH }, [0xF3] = { 4, 1, AM_NONE, IN_DI },
-    [0xF4] = { 0, 0, AM_NONE, IN_NONE }, [0xF5] = { 16, 1, AM_NONE, IN_PUSH },
-    [0xF6] = { 8, 2, AM_IMM8, IN_OR }, [0xF7] = { 16, 1, AM_NONE, IN_RST },
-    [0xF8] = { 12, 2, AM_S8, IN_LD }, [0xF9] = { 8, 1, AM_NONE, IN_LD },
-    [0xFA] = { 16, 3, AM_IMM16, IN_LD }, [0xFB] = { 4, 1, AM_NONE, IN_EI },
-    [0xFC] = { 0, 0, AM_NONE, IN_NONE }, [0xFD] = { 0, 0, AM_NONE, IN_NONE }, // Invalid
-    [0xFE] = { 8, 2, AM_IMM8, IN_CP }, [0xFF] = { 16, 1, AM_NONE, IN_RST }
+    // 0x98 - 0x9F (SBC A, y) -> dest A implied
+    [0x98] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(B), CT_NONE),
+    [0x99] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(C), CT_NONE),
+    [0x9A] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(D), CT_NONE),
+    [0x9B] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(E), CT_NONE),
+    [0x9C] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(H), CT_NONE),
+    [0x9D] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(L), CT_NONE),
+    [0x9E] = INSTR(8, 1, IN_SBC, OP_R8(A), OP_MEM_R16(HL), CT_NONE),
+    [0x9F] = INSTR(4, 1, IN_SBC, OP_R8(A), OP_R8(A), CT_NONE),
+
+    // 0xA0 - 0xA7 (AND y) -> dest A implied
+    [0xA0] = INSTR(4, 1, IN_AND, OP_R8(B), OP_NONE, CT_NONE),
+    [0xA1] = INSTR(4, 1, IN_AND, OP_R8(C), OP_NONE, CT_NONE),
+    [0xA2] = INSTR(4, 1, IN_AND, OP_R8(D), OP_NONE, CT_NONE),
+    [0xA3] = INSTR(4, 1, IN_AND, OP_R8(E), OP_NONE, CT_NONE),
+    [0xA4] = INSTR(4, 1, IN_AND, OP_R8(H), OP_NONE, CT_NONE),
+    [0xA5] = INSTR(4, 1, IN_AND, OP_R8(L), OP_NONE, CT_NONE),
+    [0xA6] = INSTR(8, 1, IN_AND, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0xA7] = INSTR(4, 1, IN_AND, OP_R8(A), OP_NONE, CT_NONE),
+
+    // 0xA8 - 0xAF (XOR y) -> dest A implied
+    [0xA8] = INSTR(4, 1, IN_XOR, OP_R8(B), OP_NONE, CT_NONE),
+    [0xA9] = INSTR(4, 1, IN_XOR, OP_R8(C), OP_NONE, CT_NONE),
+    [0xAA] = INSTR(4, 1, IN_XOR, OP_R8(D), OP_NONE, CT_NONE),
+    [0xAB] = INSTR(4, 1, IN_XOR, OP_R8(E), OP_NONE, CT_NONE),
+    [0xAC] = INSTR(4, 1, IN_XOR, OP_R8(H), OP_NONE, CT_NONE),
+    [0xAD] = INSTR(4, 1, IN_XOR, OP_R8(L), OP_NONE, CT_NONE),
+    [0xAE] = INSTR(8, 1, IN_XOR, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0xAF] = INSTR(4, 1, IN_XOR, OP_R8(A), OP_NONE, CT_NONE),
+
+    // 0xB0 - 0xB7 (OR y) -> dest A implied
+    [0xB0] = INSTR(4, 1, IN_OR, OP_R8(B), OP_NONE, CT_NONE),
+    [0xB1] = INSTR(4, 1, IN_OR, OP_R8(C), OP_NONE, CT_NONE),
+    [0xB2] = INSTR(4, 1, IN_OR, OP_R8(D), OP_NONE, CT_NONE),
+    [0xB3] = INSTR(4, 1, IN_OR, OP_R8(E), OP_NONE, CT_NONE),
+    [0xB4] = INSTR(4, 1, IN_OR, OP_R8(H), OP_NONE, CT_NONE),
+    [0xB5] = INSTR(4, 1, IN_OR, OP_R8(L), OP_NONE, CT_NONE),
+    [0xB6] = INSTR(8, 1, IN_OR, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0xB7] = INSTR(4, 1, IN_OR, OP_R8(A), OP_NONE, CT_NONE),
+
+    // 0xB8 - 0xBF (CP y) -> dest A implied
+    [0xB8] = INSTR(4, 1, IN_CP, OP_R8(B), OP_NONE, CT_NONE),
+    [0xB9] = INSTR(4, 1, IN_CP, OP_R8(C), OP_NONE, CT_NONE),
+    [0xBA] = INSTR(4, 1, IN_CP, OP_R8(D), OP_NONE, CT_NONE),
+    [0xBB] = INSTR(4, 1, IN_CP, OP_R8(E), OP_NONE, CT_NONE),
+    [0xBC] = INSTR(4, 1, IN_CP, OP_R8(H), OP_NONE, CT_NONE),
+    [0xBD] = INSTR(4, 1, IN_CP, OP_R8(L), OP_NONE, CT_NONE),
+    [0xBE] = INSTR(8, 1, IN_CP, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0xBF] = INSTR(4, 1, IN_CP, OP_R8(A), OP_NONE, CT_NONE),
+
+    // 0xC0 - 0xCF
+    [0xC0] = INSTR(8, 1, IN_RET, OP_NONE, OP_NONE, CT_NZ),
+    [0xC1] = INSTR(12, 1, IN_POP, OP_R16(BC), OP_NONE, CT_NONE),
+    [0xC2] = INSTR(12, 3, IN_JP, OP_IMM16, OP_NONE, CT_NZ),
+    [0xC3] = INSTR(16, 3, IN_JP, OP_IMM16, OP_NONE, CT_NONE),
+    [0xC4] = INSTR(12, 3, IN_CALL, OP_IMM16, OP_NONE, CT_NZ),
+    [0xC5] = INSTR(16, 1, IN_PUSH, OP_R16(BC), OP_NONE, CT_NONE),
+    [0xC6] = INSTR(8, 2, IN_ADD, OP_R8(A), OP_IMM8, CT_NONE),
+    [0xC7] = INSTR(16, 1, IN_RST, OP_FIX(0x00), OP_NONE, CT_NONE),
+    [0xC8] = INSTR(8, 1, IN_RET, OP_NONE, OP_NONE, CT_Z),
+    [0xC9] = INSTR(16, 1, IN_RET, OP_NONE, OP_NONE, CT_NONE),
+    [0xCA] = INSTR(12, 3, IN_JP, OP_IMM16, OP_NONE, CT_Z),
+    [0xCB] = INSTR(4, 1, IN_NONE, OP_NONE, OP_NONE, CT_NONE), // PREFIX
+    [0xCC] = INSTR(12, 3, IN_CALL, OP_IMM16, OP_NONE, CT_Z),
+    [0xCD] = INSTR(24, 3, IN_CALL, OP_IMM16, OP_NONE, CT_NONE),
+    [0xCE] = INSTR(8, 2, IN_ADC, OP_R8(A), OP_IMM8, CT_NONE),
+    [0xCF] = INSTR(16, 1, IN_RST, OP_FIX(0x08), OP_NONE, CT_NONE),
+
+    // 0xD0 - 0xDF
+    [0xD0] = INSTR(8, 1, IN_RET, OP_NONE, OP_NONE, CT_NC),
+    [0xD1] = INSTR(12, 1, IN_POP, OP_R16(DE), OP_NONE, CT_NONE),
+    [0xD2] = INSTR(12, 3, IN_JP, OP_IMM16, OP_NONE, CT_NC),
+    [0xD3] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xD4] = INSTR(12, 3, IN_CALL, OP_IMM16, OP_NONE, CT_NC),
+    [0xD5] = INSTR(16, 1, IN_PUSH, OP_R16(DE), OP_NONE, CT_NONE),
+    [0xD6] = INSTR(8, 2, IN_SUB, OP_IMM8, OP_NONE, CT_NONE),
+    [0xD7] = INSTR(16, 1, IN_RST, OP_FIX(0x10), OP_NONE, CT_NONE),
+    [0xD8] = INSTR(8, 1, IN_RET, OP_NONE, OP_NONE, CT_C),
+    [0xD9] = INSTR(16, 1, IN_RETI, OP_NONE, OP_NONE, CT_NONE),
+    [0xDA] = INSTR(12, 3, IN_JP, OP_IMM16, OP_NONE, CT_C),
+    [0xDB] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xDC] = INSTR(12, 3, IN_CALL, OP_IMM16, OP_NONE, CT_C),
+    [0xDD] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xDE] = INSTR(8, 2, IN_SBC, OP_R8(A), OP_IMM8, CT_NONE),
+    [0xDF] = INSTR(16, 1, IN_RST, OP_FIX(0x18), OP_NONE, CT_NONE),
+
+    // 0xE0 - 0xEF
+    [0xE0] = INSTR(12, 2, IN_LDH, OP_IO_IMM8, OP_R8(A), CT_NONE),
+    [0xE1] = INSTR(12, 1, IN_POP, OP_R16(HL), OP_NONE, CT_NONE),
+    [0xE2] = INSTR(8, 1, IN_LDH, OP_IO_C, OP_R8(A), CT_NONE),
+    [0xE3] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xE4] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xE5] = INSTR(16, 1, IN_PUSH, OP_R16(HL), OP_NONE, CT_NONE),
+    [0xE6] = INSTR(8, 2, IN_AND, OP_IMM8, OP_NONE, CT_NONE),
+    [0xE7] = INSTR(16, 1, IN_RST, OP_FIX(0x20), OP_NONE, CT_NONE),
+    [0xE8] = INSTR(16, 2, IN_ADD, OP_R16(SP), OP_IMM8_S, CT_NONE),
+    [0xE9] = INSTR(4, 1, IN_JP, OP_R16(HL), OP_NONE, CT_NONE),
+    [0xEA] = INSTR(16, 3, IN_LD, OP_MEM_IMM16, OP_R8(A), CT_NONE),
+    [0xEB] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xEC] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xED] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xEE] = INSTR(8, 2, IN_XOR, OP_IMM8, OP_NONE, CT_NONE),
+    [0xEF] = INSTR(16, 1, IN_RST, OP_FIX(0x28), OP_NONE, CT_NONE),
+
+    // 0xF0 - 0xFF
+    [0xF0] = INSTR(12, 2, IN_LDH, OP_R8(A), OP_IO_IMM8, CT_NONE),
+    [0xF1] = INSTR(12, 1, IN_POP, OP_R16(AF), OP_NONE, CT_NONE),
+    [0xF2] = INSTR(8, 1, IN_LDH, OP_R8(A), OP_IO_C, CT_NONE),
+    [0xF3] = INSTR(4, 1, IN_DI, OP_NONE, OP_NONE, CT_NONE),
+    [0xF4] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xF5] = INSTR(16, 1, IN_PUSH, OP_R16(AF), OP_NONE, CT_NONE),
+    [0xF6] = INSTR(8, 2, IN_OR, OP_IMM8, OP_NONE, CT_NONE),
+    [0xF7] = INSTR(16, 1, IN_RST, OP_FIX(0x30), OP_NONE, CT_NONE),
+    [0xF8] = INSTR(12, 2, IN_LD, OP_R16(HL), OP_SP_OFF, CT_NONE),
+    [0xF9] = INSTR(8, 1, IN_LD, OP_R16(SP), OP_R16(HL), CT_NONE),
+    [0xFA] = INSTR(16, 3, IN_LD, OP_R8(A), OP_MEM_IMM16, CT_NONE),
+    [0xFB] = INSTR(4, 1, IN_EI, OP_NONE, OP_NONE, CT_NONE),
+    [0xFC] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xFD] = INSTR(0, 0, IN_NONE, OP_NONE, OP_NONE, CT_NONE),
+    [0xFE] = INSTR(8, 2, IN_CP, OP_IMM8, OP_NONE, CT_NONE),
+    [0xFF] = INSTR(16, 1, IN_RST, OP_FIX(0x38), OP_NONE, CT_NONE)
 };
 
 static const instr_t CB_INSTR_LOOKUP[256] = {
-    // 0x00 - 0x07: RLC
-    [0x00] = { 8, 2, AM_R8, IN_RLC }, [0x06] = { 16, 2, AM_HL_INDIR, IN_RLC },
-    // 0x08 - 0x0F: RRC
-    [0x08] = { 8, 2, AM_R8, IN_RRC }, [0x0E] = { 16, 2, AM_HL_INDIR, IN_RRC },
-    // 0x10 - 0x17: RL
-    [0x10] = { 8, 2, AM_R8, IN_RL },  [0x16] = { 16, 2, AM_HL_INDIR, IN_RL },
-    // 0x18 - 0x1F: RR
-    [0x18] = { 8, 2, AM_R8, IN_RR },  [0x1E] = { 16, 2, AM_HL_INDIR, IN_RR },
-    // 0x20 - 0x27: SLA
-    [0x20] = { 8, 2, AM_R8, IN_SLA }, [0x26] = { 16, 2, AM_HL_INDIR, IN_SLA },
-    // 0x28 - 0x2F: SRA
-    [0x28] = { 8, 2, AM_R8, IN_SRA }, [0x2E] = { 16, 2, AM_HL_INDIR, IN_SRA },
-    // 0x30 - 0x37: SWAP
-    [0x30] = { 8, 2, AM_R8, IN_SWAP },[0x36] = { 16, 2, AM_HL_INDIR, IN_SWAP },
-    // 0x38 - 0x3F: SRL
-    [0x38] = { 8, 2, AM_R8, IN_SRL }, [0x3E] = { 16, 2, AM_HL_INDIR, IN_SRL },
-
-    // 0x40 - 0x7F: BIT (Testing bits 0-7)
-    [0x40] = { 8, 2, AM_R8, IN_BIT }, [0x46] = { 12, 2, AM_HL_INDIR, IN_BIT },
-    [0x7F] = { 8, 2, AM_R8, IN_BIT },
-
-    // 0x80 - 0xBF: RES (Resetting bits 0-7)
-    [0x80] = { 8, 2, AM_R8, IN_RES }, [0x86] = { 16, 2, AM_HL_INDIR, IN_RES },
+    // RLC
+    [0x00] = INSTR(8, 2, IN_RLC, OP_R8(B), OP_NONE, CT_NONE),
+    [0x01] = INSTR(8, 2, IN_RLC, OP_R8(C), OP_NONE, CT_NONE),
+    [0x02] = INSTR(8, 2, IN_RLC, OP_R8(D), OP_NONE, CT_NONE),
+    [0x03] = INSTR(8, 2, IN_RLC, OP_R8(E), OP_NONE, CT_NONE),
+    [0x04] = INSTR(8, 2, IN_RLC, OP_R8(H), OP_NONE, CT_NONE),
+    [0x05] = INSTR(8, 2, IN_RLC, OP_R8(L), OP_NONE, CT_NONE),
+    [0x06] = INSTR(16, 2, IN_RLC, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x07] = INSTR(8, 2, IN_RLC, OP_R8(A), OP_NONE, CT_NONE),
     
-    // 0xC0 - 0xFF: SET (Setting bits 0-7)
-    [0xC0] = { 8, 2, AM_R8, IN_SET }, [0xC6] = { 16, 2, AM_HL_INDIR, IN_SET }
+    // RRC
+    [0x08] = INSTR(8, 2, IN_RRC, OP_R8(B), OP_NONE, CT_NONE),
+    [0x09] = INSTR(8, 2, IN_RRC, OP_R8(C), OP_NONE, CT_NONE),
+    [0x0A] = INSTR(8, 2, IN_RRC, OP_R8(D), OP_NONE, CT_NONE),
+    [0x0B] = INSTR(8, 2, IN_RRC, OP_R8(E), OP_NONE, CT_NONE),
+    [0x0C] = INSTR(8, 2, IN_RRC, OP_R8(H), OP_NONE, CT_NONE),
+    [0x0D] = INSTR(8, 2, IN_RRC, OP_R8(L), OP_NONE, CT_NONE),
+    [0x0E] = INSTR(16, 2, IN_RRC, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x0F] = INSTR(8, 2, IN_RRC, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // RL
+    [0x10] = INSTR(8, 2, IN_RL, OP_R8(B), OP_NONE, CT_NONE),
+    [0x11] = INSTR(8, 2, IN_RL, OP_R8(C), OP_NONE, CT_NONE),
+    [0x12] = INSTR(8, 2, IN_RL, OP_R8(D), OP_NONE, CT_NONE),
+    [0x13] = INSTR(8, 2, IN_RL, OP_R8(E), OP_NONE, CT_NONE),
+    [0x14] = INSTR(8, 2, IN_RL, OP_R8(H), OP_NONE, CT_NONE),
+    [0x15] = INSTR(8, 2, IN_RL, OP_R8(L), OP_NONE, CT_NONE),
+    [0x16] = INSTR(16, 2, IN_RL, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x17] = INSTR(8, 2, IN_RL, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // RR
+    [0x18] = INSTR(8, 2, IN_RR, OP_R8(B), OP_NONE, CT_NONE),
+    [0x19] = INSTR(8, 2, IN_RR, OP_R8(C), OP_NONE, CT_NONE),
+    [0x1A] = INSTR(8, 2, IN_RR, OP_R8(D), OP_NONE, CT_NONE),
+    [0x1B] = INSTR(8, 2, IN_RR, OP_R8(E), OP_NONE, CT_NONE),
+    [0x1C] = INSTR(8, 2, IN_RR, OP_R8(H), OP_NONE, CT_NONE),
+    [0x1D] = INSTR(8, 2, IN_RR, OP_R8(L), OP_NONE, CT_NONE),
+    [0x1E] = INSTR(16, 2, IN_RR, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x1F] = INSTR(8, 2, IN_RR, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // SLA
+    [0x20] = INSTR(8, 2, IN_SLA, OP_R8(B), OP_NONE, CT_NONE),
+    [0x21] = INSTR(8, 2, IN_SLA, OP_R8(C), OP_NONE, CT_NONE),
+    [0x22] = INSTR(8, 2, IN_SLA, OP_R8(D), OP_NONE, CT_NONE),
+    [0x23] = INSTR(8, 2, IN_SLA, OP_R8(E), OP_NONE, CT_NONE),
+    [0x24] = INSTR(8, 2, IN_SLA, OP_R8(H), OP_NONE, CT_NONE),
+    [0x25] = INSTR(8, 2, IN_SLA, OP_R8(L), OP_NONE, CT_NONE),
+    [0x26] = INSTR(16, 2, IN_SLA, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x27] = INSTR(8, 2, IN_SLA, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // SRA
+    [0x28] = INSTR(8, 2, IN_SRA, OP_R8(B), OP_NONE, CT_NONE),
+    [0x29] = INSTR(8, 2, IN_SRA, OP_R8(C), OP_NONE, CT_NONE),
+    [0x2A] = INSTR(8, 2, IN_SRA, OP_R8(D), OP_NONE, CT_NONE),
+    [0x2B] = INSTR(8, 2, IN_SRA, OP_R8(E), OP_NONE, CT_NONE),
+    [0x2C] = INSTR(8, 2, IN_SRA, OP_R8(H), OP_NONE, CT_NONE),
+    [0x2D] = INSTR(8, 2, IN_SRA, OP_R8(L), OP_NONE, CT_NONE),
+    [0x2E] = INSTR(16, 2, IN_SRA, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x2F] = INSTR(8, 2, IN_SRA, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // SWAP
+    [0x30] = INSTR(8, 2, IN_SWAP, OP_R8(B), OP_NONE, CT_NONE),
+    [0x31] = INSTR(8, 2, IN_SWAP, OP_R8(C), OP_NONE, CT_NONE),
+    [0x32] = INSTR(8, 2, IN_SWAP, OP_R8(D), OP_NONE, CT_NONE),
+    [0x33] = INSTR(8, 2, IN_SWAP, OP_R8(E), OP_NONE, CT_NONE),
+    [0x34] = INSTR(8, 2, IN_SWAP, OP_R8(H), OP_NONE, CT_NONE),
+    [0x35] = INSTR(8, 2, IN_SWAP, OP_R8(L), OP_NONE, CT_NONE),
+    [0x36] = INSTR(16, 2, IN_SWAP, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x37] = INSTR(8, 2, IN_SWAP, OP_R8(A), OP_NONE, CT_NONE),
+    
+    // SRL
+    [0x38] = INSTR(8, 2, IN_SRL, OP_R8(B), OP_NONE, CT_NONE),
+    [0x39] = INSTR(8, 2, IN_SRL, OP_R8(C), OP_NONE, CT_NONE),
+    [0x3A] = INSTR(8, 2, IN_SRL, OP_R8(D), OP_NONE, CT_NONE),
+    [0x3B] = INSTR(8, 2, IN_SRL, OP_R8(E), OP_NONE, CT_NONE),
+    [0x3C] = INSTR(8, 2, IN_SRL, OP_R8(H), OP_NONE, CT_NONE),
+    [0x3D] = INSTR(8, 2, IN_SRL, OP_R8(L), OP_NONE, CT_NONE),
+    [0x3E] = INSTR(16, 2, IN_SRL, OP_MEM_R16(HL), OP_NONE, CT_NONE),
+    [0x3F] = INSTR(8, 2, IN_SRL, OP_R8(A), OP_NONE, CT_NONE),
+
+    // BIT (0x40 - 0x7F) - Partial example for brevity
+    [0x40] = INSTR(8, 2, IN_BIT, OP_FIX(0), OP_R8(B), CT_NONE),
+    [0x46] = INSTR(12, 2, IN_BIT, OP_FIX(0), OP_MEM_R16(HL), CT_NONE),
+    
+    // RES (0x80 - 0xBF)
+    [0x80] = INSTR(8, 2, IN_RES, OP_FIX(0), OP_R8(B), CT_NONE),
+    
+    // SET (0xC0 - 0xFF)
+    [0xC0] = INSTR(8, 2, IN_SET, OP_FIX(0), OP_R8(B), CT_NONE),
 };
 
 instr_t parse_instr(byte opcode){
     if(opcode >= 256) {
-        ERROR("Opcode 0b(%b) out of range!", opcode);
+        ERROR("Invalid opcode 0b%b provided!", opcode);
     }
 
     if(opcode == 0xCB) {
-        return CB_INSTR_LOOKUP[opcode];
+        return INSTR_LOOKUP[opcode];
     }
     else {
         return INSTR_LOOKUP[opcode];

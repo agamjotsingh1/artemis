@@ -37,7 +37,11 @@ typedef enum {
 
 void write_reg(reg_t reg, byte val);
 byte fetch_reg(reg_t reg);
+
+// unified register writes/fetches
+void write_unif_reg(reg_unif_t reg, dblbyte val);
 dblbyte fetch_unif_reg(reg_unif_t reg);
+
 bool is_active_flag(flag_t flag);
 
 #endif

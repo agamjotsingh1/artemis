@@ -19,13 +19,12 @@ typedef enum {
     OT_IMM8,       // Immediate 8-bit (n8)
     OT_IMM16,      // Immediate 16-bit (n16)
     OT_IMM8_SIGNED,// Signed 8-bit offset (e8)
-    OT_MEM_R16,    // Memory at register [(BC), (DE), (HL)]
+    OT_MEM_R16,    // Memory at register [(BC), (DE), (HL), (SP)]
     OT_MEM_IMM16,  // Memory at immediate address [(a16)]
     OT_MEM_HL_INC, // Memory at HL, then increment HL [(HL+)]
     OT_MEM_HL_DEC, // Memory at HL, then decrement HL [(HL-)]
     OT_MEM_IO_IMM8,// IO port at $FF00 + n8
     OT_MEM_IO_C,   // IO port at $FF00 + C
-    OT_SP_HL,      // Special case for LD SP, HL
     OT_SP_OFFSET   // SP + e8 (for LD HL, SP+e8)
 } op_type_t;
 
@@ -51,6 +50,25 @@ typedef struct {
     op_t op2; // Source or second operand
     cond_t cond; // Condition for jumps/calls/rets
 } instr_t;
+
+// Helper macros for cleaner table definition
+#define OP_NONE       (op_t){ .type = OT_NONE }
+#define OP_R8(r)      (op_t){ .type = OT_R8,      .reg = { .r8 = r } }
+#define OP_R16(r)     (op_t){ .type = OT_R16,     .reg = { .r16 = r } }
+#define OP_IMM8       (op_t){ .type = OT_IMM8 }
+#define OP_IMM16      (op_t){ .type = OT_IMM16 }
+#define OP_IMM8_S     (op_t){ .type = OT_IMM8_SIGNED }
+#define OP_FIX(v)     (op_t){ .type = OT_IMM8,    .reg = { .imm = v } } // Fixed immediate (RST/BIT)
+#define OP_MEM_R16(r) (op_t){ .type = OT_MEM_R16, .reg = { .r16 = r } }
+#define OP_MEM_IMM16  (op_t){ .type = OT_MEM_IMM16 }
+#define OP_HL_INC     (op_t){ .type = OT_MEM_HL_INC }
+#define OP_HL_DEC     (op_t){ .type = OT_MEM_HL_DEC }
+#define OP_IO_IMM8    (op_t){ .type = OT_MEM_IO_IMM8 }
+#define OP_IO_C       (op_t){ .type = OT_MEM_IO_C }
+#define OP_SP_OFF     (op_t){ .type = OT_SP_OFFSET }
+
+#define INSTR(_cycles, _len, _class, _op1, _op2, _cond) \
+    (instr_t) { .cycles = _cycles, .len = _len, .instr_class = _class, .op1 = _op1, .op2 = _op2, .cond = _cond }
 
 instr_t parse_instr(byte opcode);
 
