@@ -43,5 +43,7 @@ void write_unif_reg(reg_unif_t reg, dblbyte val);
 dblbyte fetch_unif_reg(reg_unif_t reg);
 
 bool is_active_flag(flag_t flag);
+void set_flag(flag_t flag);
+void clear_flag(flag_t flag);
 
 #endif

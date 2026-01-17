@@ -2,6 +2,7 @@
 #define DIAGNOSTICS_DEF
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define ERROR(fmt, ...) \
     do { \

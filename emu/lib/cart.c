@@ -123,7 +123,6 @@ void cart_load(char cart_filename[CART_FILENAME_SIZE]){
 
     if (cart == NULL) {
         ERROR("Failed to open cartridge...");
-        return 1;
     }
 
     // get cart size
@@ -154,6 +153,6 @@ void cart_load(char cart_filename[CART_FILENAME_SIZE]){
         ERROR("Cartridge checksum failed, cartridge may be corrupted!");
     }
 
-    // write the cart data into virtual ROM
+    // write the cart data into virtual unified memory
     mem_write_chunk(0x0000, cart_ctx.size, cart_ctx.data);
 }

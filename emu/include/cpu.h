@@ -10,4 +10,8 @@ typedef struct {
     addr_t pc;
 } cpu_ctx_t;
 
+
+void cpu_cold_start();
+void cpu_exec_once();
+
 #endif

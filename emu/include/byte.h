@@ -27,16 +27,34 @@ typedef struct {
 } val_t;
 
 #define VAL_U_BYTE(_val) \
-    (val_t) {.type = U_BYTE, .u_byte = _val}
+    ((val_t) {.type = U_BYTE, .u_byte = _val})
 
 #define VAL_U_DBLBYTE(_val) \
-    (val_t) {.type = U_DBLBYTE, .u_dblbyte = _val}
+    ((val_t) {.type = U_DBLBYTE, .u_dblbyte = _val})
 
 #define VAL_S_BYTE(_val) \
-    (val_t) {.type = S_BYTE, .s_byte = _val}
+    ((val_t) {.type = S_BYTE, .s_byte = _val})
 
 #define VAL_S_DBLBYTE(_val) \
-    (val_t) {.type = S_DBLBYTE, .s_dblbyte = _val}
+    ((val_t) {.type = S_DBLBYTE, .s_dblbyte = _val})
+
+#define STITCH(high, low) \
+    ((dblbyte) ((high << 8) | (low)))
+
+#define LOW_BYTE(val) \
+    ((byte) (val & 0x00FF))
+
+#define HIGH_BYTE(val) \
+    ((byte) (val >> 8))
+
+#define FETCH_BIT(val, pos) \
+    ((byte) ((val >> pos) & 0x1))
+
+#define WRITE_BIT(val, pos, bit) \
+    do { \
+        (val) = ((val) & ~(1U << (pos))) | ((!!(bit)) << (pos)); \
+    } while (0);
+
 
 typedef enum {
     NIBBLE,

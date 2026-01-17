@@ -37,6 +37,14 @@ dblbyte fetch_unif_reg(reg_unif_t reg){
             | (fetch_reg(reg & 0x0F) & 0xFFFF);
 }
 
+void set_flag(flag_t flag){
+    write_reg(F, fetch_reg(F) | (flag));
+}
+
+void clear_flag(flag_t flag){
+    write_reg(F, fetch_reg(F) & (~flag));
+}
+
 bool is_active_flag(flag_t flag){
     return ((fetch_reg(F) & flag) != 0x00);
 }
